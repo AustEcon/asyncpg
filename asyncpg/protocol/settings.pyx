@@ -3,20 +3,41 @@
 #
 # This module is part of asyncpg and is released under
 # the Apache 2.0 License: http://www.apache.org/licenses/LICENSE-2.0
-
-
+from asyncpg.protocol.protocol cimport DataCodecConfig
 from asyncpg import exceptions
 
-
+@cython.auto_pickle(True)
 @cython.final
 cdef class ConnectionSettings(pgproto.CodecContext):
 
-    def __cinit__(self, conn_key):
+    def __init__(self, conn_key):
         self._encoding = 'utf-8'
         self._is_utf8 = True
         self._settings = {}
         self._codec = codecs.lookup('utf-8')
         self._data_codecs = DataCodecConfig(conn_key)
+
+    def __getstate__(self):
+        return (
+            self._encoding,
+            self._is_utf8,
+            self._settings,
+            self._codec,
+            self._data_codecs)
+
+    def __setstate__(self, state):
+        # unpack
+        (_encoding,
+         _is_utf8,
+         _settings,
+         _codec,
+         _data_codecs) = state
+        self._encoding = _encoding
+        self._is_utf8 = _is_utf8
+        self._settings = _settings
+        self._codec = _codec
+        self._data_codecs = _data_codecs
+
 
     cdef add_setting(self, str name, str val):
         self._settings[name] = val

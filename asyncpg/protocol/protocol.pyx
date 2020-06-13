@@ -73,10 +73,12 @@ NO_TIMEOUT = object()
 
 
 cdef class BaseProtocol(CoreProtocol):
+
     def __init__(self, addr, connected_fut, con_params, loop):
-        # type of `con_params` is `_ConnectionParameters`
+        # type of `con_params` is `ConnectionParameters`
         CoreProtocol.__init__(self, con_params)
 
+        self.con_params = con_params
         self.loop = loop
         self.transport = None
         self.waiter = connected_fut
@@ -106,6 +108,91 @@ cdef class BaseProtocol(CoreProtocol):
             self.create_future = loop.create_future
         except AttributeError:
             self.create_future = self._create_future_fallback
+
+    def __getstate__(self):
+        print("BaseProtocol is being pickled!!!!!!!!!!")
+
+        # writing_allowed is re-made on unpickling
+        # self.settings is not pickled is re-made on unpickling
+        return (
+            self.con_params,
+            self.transport,
+            self.waiter,
+            self.cancel_waiter,
+            self.cancel_sent_waiter,
+            self.address,
+            self.statement,
+            self.return_extra,
+            self.last_query,
+            self.closing,
+            self.is_reading,
+            self.timeout_handle,
+            self.timeout_callback,
+            self.completed_callback,
+            self.queries_count,
+            # self.loop,
+            # self.conref if not None else None,
+            # self.backend_pid if not None else None,
+            # self.xact_status if not None else None
+        )
+
+    def __setstate__(self, state):
+        print("BaseProtocol is being unpickled!!!!!!!!!!")
+        # loop is not pickled is re-made on unpickling
+        # writing_allowed is re-made on unpickling
+
+        # unpack
+        (con_params,
+        transport,
+        waiter,
+        cancel_waiter,
+        cancel_sent_waiter,
+        address,
+        statement,
+        return_extra,
+        last_query,
+        closing,
+        is_reading,
+        timeout_handle,
+        timeout_callback,
+        completed_callback,
+        queries_count,
+        # loop,
+        #conref,
+        #backend_pid,
+        #xact_status) = state
+        ) = state
+        self.con_params = con_params
+        self.transport = transport
+        self.waiter = waiter
+        self.cancel_waiter = cancel_waiter
+        self.cancel_sent_waiter = cancel_sent_waiter
+        self.address = address
+        self.settings = ConnectionSettings((self.address, self.con_params.database))
+        self.statement = statement
+        self.return_extra = return_extra
+        self.last_query = last_query
+        self.closing = closing
+        self.is_reading = is_reading
+
+        # remake new Event obj
+        self.writing_allowed = asyncio.Event()
+        self.writing_allowed.set()
+
+        self.timeout_handle = timeout_handle
+        self.timeout_callback = timeout_callback
+        self.completed_callback = completed_callback
+        self.queries_count = queries_count
+        #self.loop = loop
+
+        # self.conref = conref if not None else None
+        # self.backend_pid = conref if not None else None
+        # self.xact_status = conref if not None else None
+
+        # try:
+        #     self.create_future = loop.create_future
+        # except AttributeError:
+        #     self.create_future = self._create_future_fallback
 
     def set_connection(self, connection):
         self.conref = weakref.ref(connection)

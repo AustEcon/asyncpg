@@ -30,6 +30,7 @@ include "prepared_stmt.pxd"
 cdef class BaseProtocol(CoreProtocol):
 
     cdef:
+        object conn_params
         object loop
         object address
         ConnectionSettings settings
@@ -42,6 +43,7 @@ cdef class BaseProtocol(CoreProtocol):
         object timeout_callback
         object completed_callback
         object conref
+        object writing_allowed
         bint is_reading
 
         str last_query

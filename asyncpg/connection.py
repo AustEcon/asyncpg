@@ -52,7 +52,7 @@ class Connection(metaclass=ConnectionMeta):
     def __init__(self, protocol, transport, loop,
                  addr: (str, int) or str,
                  config: connect_utils._ClientConfiguration,
-                 params: connect_utils._ConnectionParameters):
+                 params: connect_utils.ConnectionParameters):
         self._protocol = protocol
         self._transport = transport
         self._loop = loop

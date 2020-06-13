@@ -28,7 +28,7 @@ from . import exceptions
 from . import protocol
 
 
-_ConnectionParameters = collections.namedtuple(
+ConnectionParameters = collections.namedtuple(
     'ConnectionParameters',
     [
         'user',
@@ -452,7 +452,7 @@ def _parse_connect_dsn_and_args(*, dsn, host, port, user,
             'server_settings is expected to be None or '
             'a Dict[str, str]')
 
-    params = _ConnectionParameters(
+    params = ConnectionParameters(
         user=user, password=password, database=database, ssl=ssl,
         ssl_is_advisory=ssl_is_advisory, connect_timeout=connect_timeout,
         server_settings=server_settings)
@@ -674,7 +674,7 @@ async def _connect(*, loop, timeout, connection_class, **kwargs):
     raise last_error
 
 
-async def _cancel(*, loop, addr, params: _ConnectionParameters,
+async def _cancel(*, loop, addr, params: ConnectionParameters,
                   backend_pid, backend_secret):
 
     class CancelProto(asyncio.Protocol):
